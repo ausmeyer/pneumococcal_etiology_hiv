@@ -1,4 +1,4 @@
-study_ID,Gender,age,Bartlett_Score,CD4_count,Bactrim,HAART,CURB65,MR_proANP,MR_proADM,Copeptin,PCT,CRP,lytA_NP,bacteremia,Pneumococcal_diagnosis,Pneumococcal_diagnosis_expanded
+study_ID,Gender,age,Bartlett_Score,CD4_count,Bactrim,HAART,CURB65,MR_proANP,MR_proADM,Copeptin,PCT,CRP,lytA,bacteremia,Pneumococcal_diagnosis,Pneumococcal_diagnosis_expanded
 P1001,Male,46,,34,0,0,1,143.099792,0.665866,22.807442,0.28,114.8,6.7,0,0,1
 P1002,Male,43,,3,0,0,2,78.933872,4.269149,133.101761,34.4,,3.6,0,0,0
 P1003,Male,46,-1,11,0,0,2,44.254415,1.189581,28.499752,1.65,,3,0,0,0

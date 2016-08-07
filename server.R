@@ -5,6 +5,13 @@ shinyServer(function(input, output, session) {
   
   dataInput <- reactive({
     data.frame(marker.value = input$marker.value,
+               pretest = input$pretest#,
+               #cutoff = isolate({input$cutoff})
+    )
+  })
+  
+  dataInputCutoff <- reactive({
+    data.frame(marker.value = input$marker.value,
                pretest = input$pretest,
                cutoff = input$cutoff
     )
@@ -97,7 +104,7 @@ shinyServer(function(input, output, session) {
                      MR_proADM = col_double(),
                      PCT = col_double(),
                      CRP = col_double(),
-                     lytA_NP = col_double(),
+                     lytA = col_double(),
                      bacteremia = col_double(),
                      Pneumococcal_diagnosis = col_integer(),
                      Pneumococcal_diagnosis_expanded = col_integer()
@@ -114,11 +121,12 @@ shinyServer(function(input, output, session) {
   }
   
   renderCombinedPlot <- function(biomarker, xaxis) {
+    
     df.raw <- import.data(variable = biomarker)
     df <- make.test.stats.df(df = df.raw, which.variable = "pneumo")
     pretest <- dataInput()$pretest
     marker.value <- dataInput()$marker.value
-    
+
     prob.diff <- calc.prob.difference(df, pretest)
     df <- df[!is.na(prob.diff$pos.prob - prob.diff$neg.prob) & is.finite(prob.diff$pos.prob - prob.diff$neg.prob), ]
     prob.diff <- calc.prob.difference(df, pretest)
@@ -160,9 +168,9 @@ shinyServer(function(input, output, session) {
       theme_bw() +
       theme(legend.position = c(0.29, 0.86), 
             legend.title=element_blank(),
-            legend.background = element_rect(fill = alpha('white', 0.0)))
-    
-    
+            legend.background = element_rect(fill = alpha('white', 0.0)),
+            plot.margin = unit(c(0, 0, 0.5, 0.5), "lines"))
+
     df.raw.tmp <- df.raw
     
     pretest.odds <- pretest / (1 - pretest)
@@ -201,89 +209,94 @@ shinyServer(function(input, output, session) {
       theme_bw() +
       theme(legend.position = c(0.29, 0.86), 
             legend.title=element_blank(),
-            legend.background = element_rect(fill = alpha('white', 0.0)))
+            legend.background = element_rect(fill = alpha('white', 0.0)),
+            plot.margin = unit(c(0, 0, 0.5, 0.5), "lines"))
     
     p1 <- plotly_build(p1)
+    p1$data[[2]]$text <- gsub("x.value", paste(biomarker, ' Concentration', sep = ''), p1$data[[2]]$text)
+    p1$data[[2]]$text <- gsub("combined.probability", "Posttest Probability", p1$data[[2]]$text)
+    p1$data[[2]]$text <- gsub("b: b", "", p1$data[[2]]$text)
+    p1$data[[3]]$text <- paste("Pretest Probability ", pretest, sep = '')
+    p1$data[[4]]$text <- paste("Pretest Probability ", pretest, sep = '')
+    p1$data[[5]]$text <- ""
+    p1$data[[6]]$text <- gsub("x", paste(biomarker, ' Concentration', sep = ''), p1$data[[6]]$text)
+    p1$data[[6]]$text <- gsub("y", "Posttest Probability", p1$data[[6]]$text)
+    p1$data[[6]]$text <- gsub("c: c", "", p1$data[[6]]$text)
     p1 <- plot_ly(p1)
+    
     p2 <- plotly_build(p2)
+    p2$data[[2]]$text <- gsub("x.value", paste(biomarker, ' Concentration', sep = ''), p2$data[[2]]$text)
+    p2$data[[2]]$text <- gsub("y.value", "Posttest Probability", p2$data[[2]]$text)
+    p2$data[[2]]$text <- gsub("b: b", "", p2$data[[2]]$text)
+    p2$data[[3]]$text <- paste("Pretest Probability ", pretest, sep = '')
+    p2$data[[4]]$text <- paste("Pretest Probability ", pretest, sep = '')
+    p2$data[[5]]$text <- ""
+    p2$data[[6]]$text <- gsub("x", paste(biomarker, ' Concentration', sep = ''), p2$data[[6]]$text)
+    p2$data[[6]]$text <- gsub("y", "Posttest Probability", p2$data[[6]]$text)
+    p2$data[[6]]$text <- gsub("c: c", "", p2$data[[6]]$text)
     p2 <- plot_ly(p2)
     
     return(list(plot1 = p1, plot2 = p2))
   }
   
-  renderPop.changedPop <- function() {
-    library(ggplot2)
-    library(plotly)
-    
-    prevalence.point <- dataInputFitSensSpec()$prev
-    n <- dataInputFitSensSpec()$n
-    with.disease <- prevalence.point * n
-    without.disease <- n - with.disease
-    
-    plot.function <- function(disease.distribution, no.disease.distribution, sens, spec, test_cutoff) {
-      prevalence.plot <- ggplot(data.frame(data = c(disease.distribution, no.disease.distribution), 
-                                           Group = c(rep('Disease', length(disease.distribution)), 
-                                                     rep('No Disease', length(no.disease.distribution)))), 
-                                aes(x=data, fill=Group)) + 
-        geom_histogram(alpha = 0.2, position="identity", bins = 50) + 
-        geom_vline(xintercept = test_cutoff, linetype = 'solid', lwd = 0.4) +
-        theme_bw() +
-        theme(plot.margin = unit(c(0,1,0.5,1), "lines"), legend.position="none") + 
-        scale_fill_manual(values = c("No Disease" = "blue", "Disease" = "red")) +
-        scale_x_continuous(limits = c(-5, 55), breaks = seq(0, 50, by = 10)) +
-        labs(x="Clinical Test Result", y="Number of Patients")
-      
-      p <- plotly_build(prevalence.plot)
-      p$data[[1]]$text <- gsub("data", "Bin Result", p$data[[1]]$text)
-      p$data[[2]]$text <- gsub("data", "Bin Result", p$data[[2]]$text)
-      p <- plot_ly(p)
-    }
-    
-    sensitivity.local <- round(calc.metrics.changedPop()[1], digits = 3)
-    specificity.local <- round(calc.metrics.changedPop()[2], digits = 3)
-    
-    with.disease.distribution <- rnorm(with.disease, mean = dataInputFitSensSpec()$disease_mean, sd = dataInputFitSensSpec()$disease_spread)
-    without.disease.distribution <- rnorm(without.disease, mean = dataInputFitSensSpec()$no_disease_mean, sd = dataInputFitSensSpec()$no_disease_spread)
-    
-    plot.function(with.disease.distribution, without.disease.distribution, sensitivity.local, specificity.local, dataInputFitSensSpec()$cutoff)
-  }
-  
-  runBiomarker <- function() {
+  runBiomarker.continuous <- function() {
     if(input$radioBiomarker == 1) {
       output$continousPlot <- renderPlotly(renderCombinedPlot(biomarker = 'CRP', 
-                                                              xaxis = 'c-reactive protein concentration (mg/dL)')[['plot1']])
+                                                              xaxis = 'CRP (mg/dL)')[['plot1']])
       output$combinedPlot <- renderPlotly(renderCombinedPlot(biomarker = 'CRP', 
-                                                             xaxis = 'c-reactive protein concentration (mg/dL)')[['plot2']])
+                                                             xaxis = 'CRP (mg/dL)')[['plot2']])
       
     }
     if(input$radioBiomarker == 2) {
       output$continousPlot <- renderPlotly(renderCombinedPlot(biomarker = 'PCT', 
-                                                              xaxis = 'procalcitonin concentration (ng/mL)')[['plot1']])
+                                                              xaxis = 'PCT (ng/mL)')[['plot1']])
       output$combinedPlot <- renderPlotly(renderCombinedPlot(biomarker = 'PCT', 
-                                                             xaxis = 'procalcitonin concentration (ng/mL)')[['plot2']])
+                                                             xaxis = 'PCT (ng/mL)')[['plot2']])
     }
     if(input$radioBiomarker == 3) {
-      output$continousPlot <- renderPlotly(renderCombinedPlot(biomarker = 'lytA_NP', 
-                                                              xaxis = 'lytA density (log10 copies/mL)')[['plot1']])
-      output$combinedPlot <- renderPlotly(renderCombinedPlot(biomarker = 'lytA_NP', 
-                                                             xaxis = 'lytA density (log10 copies/mL)')[['plot2']])
+      output$continousPlot <- renderPlotly(renderCombinedPlot(biomarker = 'lytA', 
+                                                              xaxis = 'lytA (log10 copies/mL)')[['plot1']])
+      output$combinedPlot <- renderPlotly(renderCombinedPlot(biomarker = 'lytA', 
+                                                             xaxis = 'lytA (log10 copies/mL)')[['plot2']])
+    }
+  } 
+  
+  runBiomarker.cutoff <- function() {
+    if(input$radioBiomarker == 1) {
+      output$youdenPlot <- renderPlotly(renderCombinedPlot(biomarker = 'CRP', 
+                                                              xaxis = 'CRP (mg/dL)')[['plot1']])
+      output$bayesianPlot <- renderPlotly(renderCombinedPlot(biomarker = 'CRP', 
+                                                             xaxis = 'CRP (mg/dL)')[['plot2']])
+      
+    }
+    if(input$radioBiomarker == 2) {
+      output$youdenPlot <- renderPlotly(renderCombinedPlot(biomarker = 'PCT', 
+                                                              xaxis = 'PCT (ng/mL)')[['plot1']])
+      output$bayesianPlot <- renderPlotly(renderCombinedPlot(biomarker = 'PCT', 
+                                                             xaxis = 'PCT (ng/mL)')[['plot2']])
+    }
+    if(input$radioBiomarker == 3) {
+      output$youdenPlot <- renderPlotly(renderCombinedPlot(biomarker = 'lytA', 
+                                                              xaxis = 'lytA (log10 copies/mL)')[['plot1']])
+      output$bayesianPlot <- renderPlotly(renderCombinedPlot(biomarker = 'lytA', 
+                                                             xaxis = 'lytA (log10 copies/mL)')[['plot2']])
     }
   } 
   
   runLRtype <- function() {
     if(input$radioType == 1) {
-      runBiomarker()
+      runBiomarker.continuous()
     }
     if(input$radioType == 2) {
-      runBiomarker()
+      runBiomarker.cutoff()
     }
   }
   
   observeEvent(input$radioBiomarker, {
-    runLRtype()
+    runBiomarker.continuous()
   })
   
   observeEvent(input$radioType, {
-    runBiomarker()
+    runLRtype()
   })
 })
