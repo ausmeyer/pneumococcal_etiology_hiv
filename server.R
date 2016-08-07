@@ -18,7 +18,7 @@ shinyServer(function(input, output, session) {
   })
   
   ## Library Imports
-  libraries.call <- c("dplyr", 'tidyr', "ggplot2", "readr", "reshape", 'plotly')
+  libraries.call <- c("ggplot2", "readr", 'plotly')
   lapply(libraries.call, require, character.only = TRUE)
   
   ## Utility Functions
