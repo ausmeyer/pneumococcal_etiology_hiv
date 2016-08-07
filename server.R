@@ -89,7 +89,7 @@ shinyServer(function(input, output, session) {
   }
   
   import.data <- function(variable) {
-    df <- read_csv('~/Websites/pneumococcal_etiology_hiv/data.csv', 
+    df <- read_csv('data.csv', 
                    col_types = cols(
                      study_ID = col_character(),
                      Gender = col_character(),
