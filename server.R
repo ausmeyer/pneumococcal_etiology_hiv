@@ -90,6 +90,7 @@ shinyServer(function(input, output, session) {
   }
   
   import.data <- function(variable) {
+    # df <- read_csv('/Users/austin/Websites/pneumococcal_etiology_hiv/data.csv', 
     df <- read_csv('/srv/shiny-server/pneumococcal_etiology_hiv/data.csv', 
                    col_types = cols(
                      study_ID = col_character(),
@@ -127,7 +128,7 @@ shinyServer(function(input, output, session) {
     df <- make.test.stats.df(df = df.raw, which.variable = "pneumo")
     pretest <- dataInput()$pretest
     marker.value <- dataInput()$marker.value
-
+    
     prob.diff <- calc.prob.difference(df, pretest)
     df <- df[!is.na(prob.diff$pos.prob - prob.diff$neg.prob) & is.finite(prob.diff$pos.prob - prob.diff$neg.prob), ]
     prob.diff <- calc.prob.difference(df, pretest)
@@ -171,13 +172,15 @@ shinyServer(function(input, output, session) {
             legend.title=element_blank(),
             legend.background = element_rect(fill = alpha('white', 0.0)),
             plot.margin = unit(c(0, 0, 0.5, 0.5), "lines"))
-
-    df.raw.tmp <- df.raw
     
-    pretest.odds <- pretest / (1 - pretest)
-    x.1 <- (log(pretest.odds) - coef(fit[['pneumo.fit']])[[1]]) / coef(fit[['pneumo.fit']])[[2]]
+    df.raw.tmp <- df.raw
+    emp.pretest <- sum(df.raw.tmp$pneumo) / nrow(df.raw.tmp)
+    emp.pretest.odds <- emp.pretest / (1 - emp.pretest)
+    x.1 <- (log(emp.pretest.odds) - coef(fit[['pneumo.fit']])[[1]]) / coef(fit[['pneumo.fit']])[[2]]
     tmp.lr.continuous <- exp(coef(fit[['pneumo.fit']])[[2]] * (df.raw.tmp$variable - x.1))
-    posttest.odds <- pretest.odds * tmp.lr.continuous
+    
+    real.odds <- pretest / (1 - pretest)
+    posttest.odds <- real.odds * tmp.lr.continuous
     posttest.prob <- posttest.odds / (1 + posttest.odds)
     df.raw.tmp <- cbind(df.raw.tmp, tmp = posttest.prob)
     colnames(df.raw.tmp)[colnames(df.raw.tmp) == 'tmp'] <- paste('p_', pretest, sep = '')
@@ -265,20 +268,20 @@ shinyServer(function(input, output, session) {
   runBiomarker.cutoff <- function() {
     if(input$radioBiomarker == 1) {
       output$youdenPlot <- renderPlotly(renderCombinedPlot(biomarker = 'CRP', 
-                                                              xaxis = 'CRP (mg/dL)')[['plot1']])
+                                                           xaxis = 'CRP (mg/dL)')[['plot1']])
       output$bayesianPlot <- renderPlotly(renderCombinedPlot(biomarker = 'CRP', 
                                                              xaxis = 'CRP (mg/dL)')[['plot2']])
       
     }
     if(input$radioBiomarker == 2) {
       output$youdenPlot <- renderPlotly(renderCombinedPlot(biomarker = 'PCT', 
-                                                              xaxis = 'PCT (ng/mL)')[['plot1']])
+                                                           xaxis = 'PCT (ng/mL)')[['plot1']])
       output$bayesianPlot <- renderPlotly(renderCombinedPlot(biomarker = 'PCT', 
                                                              xaxis = 'PCT (ng/mL)')[['plot2']])
     }
     if(input$radioBiomarker == 3) {
       output$youdenPlot <- renderPlotly(renderCombinedPlot(biomarker = 'lytA', 
-                                                              xaxis = 'lytA (log10 copies/mL)')[['plot1']])
+                                                           xaxis = 'lytA (log10 copies/mL)')[['plot1']])
       output$bayesianPlot <- renderPlotly(renderCombinedPlot(biomarker = 'lytA', 
                                                              xaxis = 'lytA (log10 copies/mL)')[['plot2']])
     }
