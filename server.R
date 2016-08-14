@@ -223,20 +223,20 @@ shinyServer(function(input, output, session) {
     p1$data[[3]]$text <- paste("Pretest Probability ", pretest, sep = '')
     p1$data[[4]]$text <- paste("Pretest Probability ", pretest, sep = '')
     p1$data[[5]]$text <- ""
-    p1$data[[6]]$text <- gsub("x", paste(biomarker, ' Concentration', sep = ''), p1$data[[6]]$text)
-    p1$data[[6]]$text <- gsub("y", "Posttest Probability", p1$data[[6]]$text)
+    p1$data[[6]]$text <- gsub("x:", paste(biomarker, ' Concentration:', sep = ''), p1$data[[6]]$text)
+    p1$data[[6]]$text <- gsub("y:", "Posttest Probability:", p1$data[[6]]$text)
     p1$data[[6]]$text <- gsub("c: c", "", p1$data[[6]]$text)
     p1 <- plot_ly(p1)
     
     p2 <- plotly_build(p2)
-    p2$data[[2]]$text <- gsub("x.value", paste(biomarker, ' Concentration', sep = ''), p2$data[[2]]$text)
-    p2$data[[2]]$text <- gsub("y.value", "Posttest Probability", p2$data[[2]]$text)
+    p2$data[[2]]$text <- gsub("x.value:", paste(biomarker, ' Concentration:', sep = ''), p2$data[[2]]$text)
+    p2$data[[2]]$text <- gsub("y.value:", "Posttest Probability:", p2$data[[2]]$text)
     p2$data[[2]]$text <- gsub("b: b", "", p2$data[[2]]$text)
     p2$data[[3]]$text <- paste("Pretest Probability ", pretest, sep = '')
     p2$data[[4]]$text <- paste("Pretest Probability ", pretest, sep = '')
     p2$data[[5]]$text <- ""
-    p2$data[[6]]$text <- gsub("x", paste(biomarker, ' Concentration', sep = ''), p2$data[[6]]$text)
-    p2$data[[6]]$text <- gsub("y", "Posttest Probability", p2$data[[6]]$text)
+    p2$data[[6]]$text <- gsub("x:", paste(biomarker, ' Concentration:', sep = ''), p2$data[[6]]$text)
+    p2$data[[6]]$text <- gsub("y:", "Posttest Probability:", p2$data[[6]]$text)
     p2$data[[6]]$text <- gsub("c: c", "", p2$data[[6]]$text)
     p2 <- plot_ly(p2)
     
