@@ -90,8 +90,8 @@ shinyServer(function(input, output, session) {
   }
   
   import.data <- function(variable) {
-    # df <- read_csv('/Users/austin/Websites/pneumococcal_etiology_hiv/data.csv', 
-    df <- read_csv('/srv/shiny-server/pneumococcal_etiology_hiv/data.csv', 
+    df <- read_csv('/Users/austin/Websites/pneumococcal_etiology_hiv/data.csv', 
+    #df <- read_csv('/srv/shiny-server/pneumococcal_etiology_hiv/data.csv', 
                    col_types = cols(
                      study_ID = col_character(),
                      Gender = col_character(),
@@ -156,22 +156,18 @@ shinyServer(function(input, output, session) {
     }
     
     p1 <- ggplot() + 
-      geom_segment(aes(x = 0, y = pretest, xend = max(df$x.value), yend = pretest, color = 'a'), linetype = 2) +
-      geom_point(data = df, aes(x = x.value, y = combined.probability, color = "b"), size = 0.5) +
-      geom_point(data = data.frame(x = 0, y = pretest), aes(x = x, y = y, color = 'a')) +
-      geom_point(data = data.frame(x = max(df$x.value), y = pretest), aes(x = x, y = y, color = 'a')) +
-      geom_segment(aes(x = x.value.point, y = 0, xend = x.value.point, yend = y.value.point, color = 'c'), linetype = 2) +
-      geom_point(data = data.frame(x = x.value.point, y = y.value.point), aes(x = x, y = y, color = 'c')) +
-      
+      geom_segment(aes(x = 0, y = pretest, xend = max(df$x.value), yend = pretest), color = 'red', linetype = 2) +
+      geom_point(data = data.frame(Test.Result = df$x.value, Posttest.Probability = df$combined.probability), aes(x = Test.Result, y = Posttest.Probability), color = 'blue', size = 0.5) +
+      geom_point(data = data.frame(Test.Result = 0, Prestest.Probability = pretest), aes(x = Test.Result, y = Prestest.Probability), color = 'red') +
+      geom_point(data = data.frame(Test.Result = max(df$x.value), Prestest.Probability = pretest), aes(x = Test.Result, y = Prestest.Probability), color = 'red') +
+      geom_segment(data = data.frame(Test.Result = x.value.point, No.Meaning = 0, Posttest.Probability = y.value.point), aes(x = Test.Result, y = No.Meaning, xend = Test.Result, yend = Posttest.Probability), color = 'black', linetype = 2) +
+      geom_point(data = data.frame(Test.Result = x.value.point, Posttest.Probability = y.value.point), aes(x = Test.Result, y = Posttest.Probability), color = 'black') +
       ylim(0, 1) + 
       xlab(xaxis) +
       ylab("probability pneumococcal") +
-      scale_color_discrete(name = "", labels = c(a = 'pretest probability', b = 'full posttest', c = 'posttest probability')) +
+      scale_color_discrete(name = "", labels = list(a = 'pretest probability', b = 'full posttest', c = 'posttest probability')) +
       theme_bw() +
-      theme(legend.position = c(0.29, 0.86), 
-            legend.title=element_blank(),
-            legend.background = element_rect(fill = alpha('white', 0.0)),
-            plot.margin = unit(c(0, 0, 0.5, 0.5), "lines"))
+      theme(legend.position="none")
     
     df.raw.tmp <- df.raw
     emp.pretest <- sum(df.raw.tmp$pneumo) / nrow(df.raw.tmp)
@@ -200,45 +196,21 @@ shinyServer(function(input, output, session) {
     }
     
     p2 <- ggplot() + 
-      geom_segment(aes(x = 0, y = pretest, xend = max(df.raw.tmp$x.value), yend = pretest, color = 'a'), linetype = 2) +
-      geom_point(data = df.raw.tmp, aes(x = x.value, y = y.value, color = "b"), size = 0.5) +
-      geom_point(data = data.frame(x = 0, y = pretest), aes(x = x, y = y, color = 'a')) +
-      geom_point(data = data.frame(x = max(df.raw.tmp$x.value), y = pretest), aes(x = x, y = y, color = 'a')) +
-      geom_segment(aes(x = x.value.point.log, y = 0, xend = x.value.point.log, yend = y.value.point.log, color = 'c'), linetype = 2) +
-      geom_point(data = data.frame(x = x.value.point.log, y = y.value.point.log), aes(x = x, y = y, color = 'c')) +
+      geom_segment(aes(x = 0, y = pretest, xend = max(df.raw.tmp$x.value), yend = pretest), color = 'red', linetype = 2) +
+      geom_point(data = data.frame(Test.Result = df.raw.tmp$x.value, Posttest.Probability = df.raw.tmp$y.value), aes(x = Test.Result, y = Posttest.Probability), color = 'blue', size = 0.5) +
+      geom_point(data = data.frame(Test.Result = 0, Prestest.Probability = pretest), aes(x = Test.Result, y = Prestest.Probability), color = 'red') +
+      geom_point(data = data.frame(Test.Result = max(df.raw.tmp$x.value), Prestest.Probability = pretest), aes(x = Test.Result, y = Prestest.Probability), color = 'red') +
+      geom_segment(data = data.frame(Test.Result = x.value.point.log, No.Meaning = 0, Posttest.Probability = y.value.point.log), aes(x = Test.Result, y = No.Meaning, xend = Test.Result, yend = Posttest.Probability), color = 'black', linetype = 2) +
+      geom_point(data = data.frame(Test.Result = x.value.point.log, Posttest.Probability = y.value.point.log), aes(x = Test.Result, y = Posttest.Probability), color = 'black') +
       ylim(0, 1) + 
       xlab(xaxis) +
       ylab("probability pneumococcal") +
       scale_color_discrete(name = "", labels = c(a = 'pretest probability', b = 'continuous posttest', c = 'posttest probability')) +
       theme_bw() +
-      theme(legend.position = c(0.29, 0.86), 
-            legend.title=element_blank(),
-            legend.background = element_rect(fill = alpha('white', 0.0)),
-            plot.margin = unit(c(0, 0, 0.5, 0.5), "lines"))
+      theme(legend.position="none")
     
-    p1 <- plotly_build(p1)
-    p1$data[[2]]$text <- gsub("x.value", paste(biomarker, ' Concentration', sep = ''), p1$data[[2]]$text)
-    p1$data[[2]]$text <- gsub("combined.probability", "Posttest Probability", p1$data[[2]]$text)
-    p1$data[[2]]$text <- gsub("b: b", "", p1$data[[2]]$text)
-    p1$data[[3]]$text <- paste("Pretest Probability ", pretest, sep = '')
-    p1$data[[4]]$text <- paste("Pretest Probability ", pretest, sep = '')
-    p1$data[[5]]$text <- ""
-    p1$data[[6]]$text <- gsub("x:", paste(biomarker, ' Concentration:', sep = ''), p1$data[[6]]$text)
-    p1$data[[6]]$text <- gsub("y:", "Posttest Probability:", p1$data[[6]]$text)
-    p1$data[[6]]$text <- gsub("c: c", "", p1$data[[6]]$text)
-    p1 <- plot_ly(p1)
-    
-    p2 <- plotly_build(p2)
-    p2$data[[2]]$text <- gsub("x.value:", paste(biomarker, ' Concentration:', sep = ''), p2$data[[2]]$text)
-    p2$data[[2]]$text <- gsub("y.value:", "Posttest Probability:", p2$data[[2]]$text)
-    p2$data[[2]]$text <- gsub("b: b", "", p2$data[[2]]$text)
-    p2$data[[3]]$text <- paste("Pretest Probability ", pretest, sep = '')
-    p2$data[[4]]$text <- paste("Pretest Probability ", pretest, sep = '')
-    p2$data[[5]]$text <- ""
-    p2$data[[6]]$text <- gsub("x:", paste(biomarker, ' Concentration:', sep = ''), p2$data[[6]]$text)
-    p2$data[[6]]$text <- gsub("y:", "Posttest Probability:", p2$data[[6]]$text)
-    p2$data[[6]]$text <- gsub("c: c", "", p2$data[[6]]$text)
-    p2 <- plot_ly(p2)
+    p1 <- ggplotly(p1)
+    p2 <- ggplotly(p2)
     
     return(list(plot1 = p1, plot2 = p2))
   }
